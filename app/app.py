@@ -5,7 +5,7 @@ logging.basicConfig(filename='error_log.txt', level=logging.ERROR,
                     format='%(asctime)s [%(levelname)s]: %(message)s')
 
 
-def processar_transacoes(arquivo_entrada, arquivo_saida, valor_minimo):
+def processar_transacoes(arquivo_entrada: str, arquivo_saida: str, valor_minimo: int | float) -> None:
     try:
         # Leitura do arquivo CSV de entrada e abertura do de saída, sem abrir 2 with's separados
         with open(arquivo_entrada, 'r', newline='') as entrada, open(arquivo_saida, 'w', newline='') as saida:
