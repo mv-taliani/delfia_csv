@@ -5,38 +5,62 @@ logging.basicConfig(filename='error_log.txt', level=logging.ERROR,
                     format='%(asctime)s [%(levelname)s]: %(message)s')
 
 
-def processar_transacoes(arquivo_entrada: str, arquivo_saida: str, valor_minimo: int | float) -> None:
+def is_high_value(value, valor_minimo):
+    return value and float(value) > valor_minimo
+
+
+def processar_transacoes(arquivo_entrada: str, arquivo_saida: str, valor_minimo: int | float) -> tuple[bool, str]:
     try:
-        # Leitura do arquivo CSV de entrada e abertura do de saída, sem abrir 2 with's separados
-        with open(arquivo_entrada, 'r', newline='') as entrada, open(arquivo_saida, 'w', newline='') as saida:
-            leitor_csv = csv.reader(entrada)
-            escritor_csv = csv.writer(saida)
+        # Verifica se o valor_minimo é numérico, senão gera erro dentro da list_comprehension
+        if not isinstance(valor_minimo, (int, float)):
+            raise TypeError('Valor mínimo inválido')
 
-            # Segundo parâmetro para evitar StopIteration caso não haja cabeçalho
-            cabecalho = next(leitor_csv, None)
+        # open's separados para problemas em um arquivo não interferirem no outro
+        with open(arquivo_entrada, 'r', newline='') as infile:
+            reader = csv.reader(infile)
+            header = next(reader, None)
 
-            # Filtro acima do valor minimo
-            transacoes_acima_de = [
-                [nome, float(valor), data]
-                for nome, valor, data in leitor_csv
-                if valor and float(valor) > valor_minimo
+            high_value_transactions = [
+                [name, float(value), date]
+                for name, value, date in reader
+                if is_high_value(value, valor_minimo)
             ]
 
-            # Gravação das transações acima do valor minimo no novo arquivo CSV
-            escritor_csv.writerow(cabecalho)
-            escritor_csv.writerows(transacoes_acima_de)
+        with open(arquivo_saida, 'w', newline='') as outfile:
+            writer = csv.writer(outfile)
 
+            if header:
+                writer.writerow(header)
+
+            writer.writerows(high_value_transactions)
+
+        # caso seja utilizado apenas no terminal
         print(f'Transações acima de ${valor_minimo} foram salvas em {arquivo_saida}.')
 
+        return True, ''
+
+
+    # excepts específicos para melhor explicação de erros ao usuário
+
     except csv.Error as e:
-        logging.error(f'Erro ao processar arquivo CSV: {str(e)}')
-        print('Ocorreu um erro ao processar o arquivo CSV.')
-    except ValueError as e:
-        logging.error(f'Erro de valor: {str(e)}')
-        print('Ocorreu um erro de valor durante o processamento.')
+        mensagem_erro = f'Erro ao processar arquivo CSV: {str(e)}'
+        logging.error(mensagem_erro)
+        return False, mensagem_erro
+
+    except FileNotFoundError as e:
+        mensagem_erro = f'Arquivo não existe: {str(e)}'
+        logging.error(mensagem_erro)
+        return False, f'Arquivo não encontrado: {arquivo_entrada}'
+
+    except (ValueError, TypeError) as e:
+        mensagem_erro = f'Error: {str(e)}'
+        logging.error(mensagem_erro)
+        return False, mensagem_erro
+
     except Exception as e:
-        logging.error(f'Ocorreu um erro inesperado: {str(e)}')
-        print('Ocorreu um erro inesperado. Consulte o arquivo error_log.txt para obter mais detalhes.')
+        mensagem_erro = f'Ocorreu um erro inesperado: {str(e)}'
+        logging.error(mensagem_erro)
+        return False, mensagem_erro
 
 
 if __name__ == '__main__':
