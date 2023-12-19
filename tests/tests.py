@@ -6,7 +6,7 @@ import unittest
 from tkinter import Tk
 from unittest.mock import patch
 
-# Importe a função que você deseja testar
+
 from delphia_csv.app.app import processar_transacoes
 
 
