@@ -1,13 +1,13 @@
-import io
-import logging
 import os
+import sys
 import tempfile
 import unittest
-from tkinter import Tk
-from unittest.mock import patch
 
+caminho_atual = os.path.dirname(os.path.realpath(__file__))
+caminho_app = os.path.join(caminho_atual, '../app')
+sys.path.append(caminho_app)
 
-from delphia_csv.app.app import processar_transacoes
+from app import processar_transacoes
 
 
 class TestProcessarTransacoes(unittest.TestCase):
