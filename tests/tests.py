@@ -1,9 +1,8 @@
 import io
 import logging
-
-import unittest
-import tempfile
 import os
+import tempfile
+import unittest
 from tkinter import Tk
 from unittest.mock import patch
 
@@ -12,7 +11,6 @@ from delphia_csv.app.app import processar_transacoes
 
 
 class TestProcessarTransacoes(unittest.TestCase):
-
     def setUp(self):
         # Cria um arquivo temporário de entrada para os testes
         self.arquivo_entrada = tempfile.NamedTemporaryFile(delete=False)
@@ -21,7 +19,7 @@ class TestProcessarTransacoes(unittest.TestCase):
 
         self.arquivo_vazio = tempfile.NamedTemporaryFile(delete=False)
 
-        with open(self.arquivo_entrada.name, 'w', newline='') as file:
+        with open(self.arquivo_entrada.name, "w", newline="") as file:
             file.write("Nome,Valor,Data\n")
             file.write("Cliente1,1500,2023-01-01\n")
             file.write("Cliente2,800,2023-01-02\n")
@@ -38,33 +36,44 @@ class TestProcessarTransacoes(unittest.TestCase):
         processar_transacoes(self.arquivo_entrada.name, self.arquivo_saida.name, 1000)
 
         # Lê o conteúdo do arquivo de saída gerado pela função
-        with open(self.arquivo_saida.name, 'r', newline='') as file:
+        with open(self.arquivo_saida.name, "r", newline="") as file:
             linhas = file.readlines()
 
         # Verifica se a função gerou o resultado esperado
-        self.assertEqual(len(linhas), 3)  # Incluindo o cabeçalho, devem haver três linhas
-        self.assertIn("Cliente1,1500.0,2023-01-01\r\n", linhas)  # Transação acima de $1000
-        self.assertIn("Cliente3,1200.0,2023-01-03\r\n", linhas)  # Transação acima de $1000
+        self.assertEqual(
+            len(linhas), 3
+        )  # Incluindo o cabeçalho, devem haver três linhas
+        self.assertIn(
+            "Cliente1,1500.0,2023-01-01\r\n", linhas
+        )  # Transação acima de $1000
+        self.assertIn(
+            "Cliente3,1200.0,2023-01-03\r\n", linhas
+        )  # Transação acima de $1000
 
     def test_processamento_com_sucesso_sem_transacoes_acima_do_valor(self):
-        sucesso, mensagem_erro = processar_transacoes(self.arquivo_vazio.name, self.arquivo_saida.name, 5000)
+        sucesso, mensagem_erro = processar_transacoes(
+            self.arquivo_vazio.name, self.arquivo_saida.name, 5000
+        )
 
         self.assertTrue(sucesso)
-        self.assertEqual('', mensagem_erro)
+        self.assertEqual("", mensagem_erro)
 
     def test_processamento_com_erro_csv(self):
-        sucesso, mensagem_erro = processar_transacoes('arquivo_invalido.csv', self.arquivo_saida.name, 1000)
+        sucesso, mensagem_erro = processar_transacoes(
+            "arquivo_invalido.csv", self.arquivo_saida.name, 1000
+        )
 
         self.assertFalse(sucesso)
         self.assertIn("Arquivo não encontrado: arquivo_invalido.csv", mensagem_erro)
 
     def test_processamento_com_erro_valor(self):
-        sucesso, mensagem_erro = processar_transacoes(self.arquivo_entrada.name, self.arquivo_saida.name,
-                                                      'valor_invalido')
+        sucesso, mensagem_erro = processar_transacoes(
+            self.arquivo_entrada.name, self.arquivo_saida.name, "valor_invalido"
+        )
 
         self.assertFalse(sucesso)
-        self.assertIn('Valor mínimo inválido', mensagem_erro)
+        self.assertIn("Valor mínimo inválido", mensagem_erro)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
